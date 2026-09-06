@@ -60,5 +60,5 @@ It features a fast, robust Python/FastAPI backend and a beautiful React + Vite f
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React, Vite, Tailwind CSS v3, Lucide React, React Router
-- **Backend**: Python, FastAPI, Uvicorn, SQLite, pdfplumber
+- **Frontend**: React, Vite, Tailwind CSS v3, Lucide React, React Router.
+- **Backend**: Python, FastAPI, Uvicorn, SQLite, pdfplumber.
