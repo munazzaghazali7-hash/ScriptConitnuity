@@ -1,28 +1,35 @@
-# Script Continuity Agent
+# ScriptContinuity Agent 🎬
 
-An AI-powered pipeline designed to catch continuity errors in screenplays before production begins. 
-It features a fast, robust Python/FastAPI backend and a beautiful React + Vite frontend.
+> Catch every continuity error before you shoot.
+
+An intelligent cinematic agent that automates the tedious part of script supervision. Filmmakers upload their screenplay (PDF), and our AI agent reads it scene-by-scene, extracts character/prop/weather states, builds a continuity database, and flags contradictions before they cost a reshoot.
+
+Built for **Agentic Cinema: The Blockbuster Hackathon**.
 
 ## ✨ Features
 
 ### Frontend (React + Vite)
-- **Dark-Mode First Aesthetic**: A modern, vibrant, glassmorphic design inspired by Localcan.
+- **Cinematic Aesthetic**: A modern, vibrant, glassmorphic design system using the cutting-edge **Tailwind CSS v4**.
+- **Interactive 3D**: Integrates Three.js / React Three Fiber for an interactive, geometric background sphere that reacts to the application's state.
 - **Real-Time Agent Terminal**: Watch the AI analyze your script scene-by-scene via a live Server-Sent Events (SSE) streaming terminal.
-- **Drag & Drop Uploads**: Seamlessly upload screenplay PDFs with a slick, command-line inspired interface.
 - **Interactive Continuity Reports**: View side-by-side script excerpts highlighting exact locations of major and minor continuity contradictions (props, wardrobe, weather, timelines).
 
 ### Backend (Python + FastAPI)
 - **PDF Screenplay Parsing**: Robust ingestion of screenplay PDFs, accurately splitting them into distinct scenes based on standard sluglines (INT/EXT).
-- **LLM Extraction Engine**: Uses advanced LLM prompting to extract structured JSON data (characters, props, wardrobe, weather, time) from raw scene text.
+- **Gemini Agent Engine**: Leverages Google Gemini to extract structured JSON data (characters, props, wardrobe, weather, time) from raw scene text.
 - **SQLite Continuity Store**: Maintains a running database of extracted facts as the script is processed chronologically.
-- **Contradiction Detection Logic**: Cross-references new scenes against the continuity store to flag mismatches in timelines, character states, and props.
 - **Asynchronous Streaming**: Employs FastAPI's `EventSourceResponse` to push live analysis updates and progress to the frontend over SSE.
 
-## 🚀 Getting Started
+## 🚀 Live Demo
+- **Frontend**: [https://scriptcontinuity-frontend.onrender.com](https://scriptcontinuity-frontend.onrender.com)
+- **Backend**: [https://scriptconitnuity-backend.onrender.com](https://scriptconitnuity-backend.onrender.com)
+
+## 🛠 Local Setup
 
 ### Prerequisites
-- Node.js (v18+ recommended)
-- Python 3.9+
+- Node.js (v18+)
+- Python 3.12+
+- Gemini API Key
 
 ### Backend Setup
 1. Navigate to the `backend/` directory:
@@ -50,7 +57,7 @@ It features a fast, robust Python/FastAPI backend and a beautiful React + Vite f
    ```
 2. Install Node dependencies:
    ```bash
-   npm install
+   npm install --legacy-peer-deps
    ```
 3. Start the Vite development server:
    ```bash
@@ -58,7 +65,14 @@ It features a fast, robust Python/FastAPI backend and a beautiful React + Vite f
    ```
 4. Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-## 🛠 Tech Stack
+## ⚙️ Deployment
+This project is configured for automated Infrastructure-as-Code deployment to **Render** via the included `render.yaml` Blueprint.
 
-- **Frontend**: React, Vite, Tailwind CSS v3, Lucide React, React Router
-- **Backend**: Python, FastAPI, Uvicorn, SQLite, pdfplumber
+1. Connect the repository to Render via Blueprint.
+2. Render will automatically provision the Python Web Service and the React Static Site.
+3. Ensure you add `GEMINI_API_KEY` and `PYTHON_VERSION=3.12.0` to the Backend's Environment Variables.
+
+## 🧠 Built With
+- **Frontend**: React, Vite, Tailwind CSS v4, Framer Motion, Three.js, Lucide React
+- **Backend**: Python, FastAPI, Uvicorn, Google Gemini API, SSE, SQLite
+- **Deployment**: Render
