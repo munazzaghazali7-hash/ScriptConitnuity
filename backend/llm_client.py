@@ -47,6 +47,8 @@ async def call_llm(
 
     if provider == "mock":
         return await _mock_llm(prompt, system_prompt)
+    elif provider in ("gemini", "google", "google_genai"):
+        return await _gemini_call(prompt, system_prompt)
     elif provider == "watsonx":
         return await _watsonx_call(prompt, system_prompt)
     elif provider == "openai":
@@ -429,6 +431,40 @@ def _mock_check_contradictions(prompt: str) -> str:
         pass
 
     return json.dumps({"contradictions": contradictions})
+
+
+# ---------------------------------------------------------------------------
+# Google Cloud Gemini integration (google-genai SDK)
+# ---------------------------------------------------------------------------
+
+async def _gemini_call(prompt: str, system_prompt: str = "") -> str:
+    """
+    Google Cloud Gemini integration using the official google-genai SDK.
+    """
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        raise ImportError("google-genai is not installed. Please pip install google-genai")
+
+    def _sync_call():
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required.")
+        client = genai.Client(api_key=api_key)
+        config = types.GenerateContentConfig(
+            system_instruction=system_prompt if system_prompt else None,
+            temperature=0.1,
+            response_mime_type="application/json",
+        )
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+            config=config,
+        )
+        return response.text
+
+    return await asyncio.to_thread(_sync_call)
 
 
 # ---------------------------------------------------------------------------
