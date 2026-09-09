@@ -16,7 +16,7 @@ Built for **Agentic Cinema: The Blockbuster Hackathon**.
 
 ### Backend (Python + FastAPI)
 - **PDF Screenplay Parsing**: Robust ingestion of screenplay PDFs, accurately splitting them into distinct scenes based on standard sluglines (INT/EXT).
-- **Gemini Agent Engine**: Leverages Google Gemini to extract structured JSON data (characters, props, wardrobe, weather, time) from raw scene text.
+- **IBM watsonx Agent Engine**: Leverages IBM's `granite-3-8b-instruct` model via watsonx.ai to extract structured JSON data (characters, props, wardrobe, weather, time) from raw scene text.
 - **SQLite Continuity Store**: Maintains a running database of extracted facts as the script is processed chronologically.
 - **Asynchronous Streaming**: Employs FastAPI's `EventSourceResponse` to push live analysis updates and progress to the frontend over SSE.
 
@@ -29,7 +29,7 @@ Built for **Agentic Cinema: The Blockbuster Hackathon**.
 ### Prerequisites
 - Node.js (v18+)
 - Python 3.12+
-- Gemini API Key
+- IBM watsonx.ai API Key & Project ID
 
 ### Backend Setup
 1. Navigate to the `backend/` directory:
@@ -70,9 +70,9 @@ This project is configured for automated Infrastructure-as-Code deployment to **
 
 1. Connect the repository to Render via Blueprint.
 2. Render will automatically provision the Python Web Service and the React Static Site.
-3. Ensure you add `GEMINI_API_KEY` and `PYTHON_VERSION=3.12.0` to the Backend's Environment Variables.
+3. Ensure you add `WATSONX_API_KEY` and `WATSONX_PROJECT_ID` to the Backend's Environment Variables.
 
 ## 🧠 Built With
 - **Frontend**: React, Vite, Tailwind CSS v4, Framer Motion, Three.js, Lucide React
-- **Backend**: Python, FastAPI, Uvicorn, Google Gemini API, SSE, SQLite
+- **Backend**: Python, FastAPI, Uvicorn, IBM watsonx.ai, Granite Models, SSE, SQLite
 - **Deployment**: Render

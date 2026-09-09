@@ -16,6 +16,7 @@ For watsonx / Granite integration:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -436,43 +437,38 @@ def _mock_check_contradictions(prompt: str) -> str:
 
 async def _watsonx_call(prompt: str, system_prompt: str = "") -> str:
     """
-    watsonx / Granite integration stub.
-
-    To implement:
-    1. pip install ibm-watsonx-ai
-    2. Set env vars: WATSONX_API_KEY, WATSONX_PROJECT_ID, WATSONX_URL
-    3. Uncomment and fill in below:
-
-    ```python
-    from ibm_watsonx_ai.foundation_models import ModelInference
-    from ibm_watsonx_ai import Credentials
-
-    credentials = Credentials(
-        url=os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com"),
-        api_key=os.getenv("WATSONX_API_KEY"),
-    )
-    model = ModelInference(
-        model_id="ibm/granite-3-8b-instruct",  # or your preferred model
-        credentials=credentials,
-        project_id=os.getenv("WATSONX_PROJECT_ID"),
-        params={
-            "max_new_tokens": 4096,
-            "temperature": 0.1,
-        },
-    )
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-    response = model.chat(messages=messages)
-    return response["choices"][0]["message"]["content"]
-    ```
+    watsonx / Granite integration using ibm-watsonx-ai.
     """
-    raise NotImplementedError(
-        "watsonx provider not configured. Set WATSONX_API_KEY, "
-        "WATSONX_PROJECT_ID, and WATSONX_URL env vars, then "
-        "implement _watsonx_call() in llm_client.py."
-    )
+    try:
+        from ibm_watsonx_ai.foundation_models import ModelInference
+        from ibm_watsonx_ai import Credentials
+    except ImportError:
+        raise ImportError("ibm-watsonx-ai is not installed. Please pip install ibm-watsonx-ai")
+
+    def _sync_call():
+        credentials = Credentials(
+            url=os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com"),
+            api_key=os.getenv("WATSONX_API_KEY"),
+        )
+        model = ModelInference(
+            model_id="ibm/granite-3-8b-instruct",
+            credentials=credentials,
+            project_id=os.getenv("WATSONX_PROJECT_ID"),
+            params={
+                "max_new_tokens": 4096,
+                "temperature": 0.1,
+            },
+        )
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        
+        response = model.chat(messages=messages)
+        return response["choices"][0]["message"]["content"]
+
+    # Run the synchronous SDK call in a background thread so we don't block SSE stream
+    return await asyncio.to_thread(_sync_call)
 
 
 # ---------------------------------------------------------------------------
