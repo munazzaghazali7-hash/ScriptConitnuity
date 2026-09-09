@@ -6,40 +6,40 @@ export default function Navbar() {
   const isHome = location.pathname === '/';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-nav">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
       <div className="container-main">
-        <nav className="flex items-center justify-between h-16">
+        <nav className="flex items-center justify-between h-[80px]">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 text-text-primary hover:text-accent transition-colors outline-none"
+            className="flex items-center gap-3 text-platinum hover:text-white transition-colors outline-none"
           >
-            <div className="w-8 h-8 rounded-md bg-white/10 flex items-center justify-center border border-white/20">
-              <Film size={18} className="text-accent" />
+            <div className="w-8 h-8 flex items-center justify-center">
+              <Film size={20} className="text-white" />
             </div>
-            <span className="text-lg font-mono font-medium tracking-tight">
-              ContinuityAgent
+            <span className="text-[16px] font-medium tracking-wide uppercase">
+              SCRIPTCONTINUITY
             </span>
           </Link>
 
           {/* Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             {isHome && (
               <a
-                href="#faq"
-                className="hidden md:block text-sm font-mono text-text-secondary hover:text-text-primary transition-colors"
+                href="#how-it-works"
+                className="btn-ghost hidden md:block"
               >
-                FAQ
+                Features
               </a>
             )}
             <Link
               to="/upload?demo=true"
-              className="text-sm font-mono text-text-secondary hover:text-text-primary transition-colors px-3 py-2"
+              className="btn-ghost hidden md:block"
             >
               Demo
             </Link>
-            <Link to="/upload" className="btn-primary !py-1.5 !px-4">
-              Start Building
+            <Link to="/upload" className="btn-primary">
+              Launch App
             </Link>
           </div>
         </nav>

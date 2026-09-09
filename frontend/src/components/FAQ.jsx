@@ -28,37 +28,38 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState(null);
 
   return (
-    <section id="faq" className="section bg-bg">
+    <section id="faq" className="section bg-liquid-abyss">
       <div className="container-narrow">
         {/* Section header */}
         <div className="text-center mb-16">
-          <h2 className="text-h2 text-text-primary mb-4 font-mono">Questions</h2>
+          <span className="section-eyebrow block mb-4">FAQ</span>
+          <h2 className="text-heading text-platinum font-medium">Questions</h2>
         </div>
 
         {/* Accordion */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {faqs.map((faq, i) => {
             const isOpen = openIndex === i;
             return (
-              <div key={i} className="card !p-0 overflow-hidden bg-[#161616] hover:border-white/20 transition-colors">
+              <div key={i} className="bg-liquid-deep rounded-cards overflow-hidden transition-colors">
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : i)}
-                  className="w-full flex items-center justify-between gap-4 p-5 text-left transition-colors"
+                  className="w-full flex items-center justify-between gap-4 p-6 text-left transition-colors"
                   aria-expanded={isOpen}
                 >
-                  <span className="text-body font-mono font-medium text-text-primary">
+                  <span className="text-body font-medium text-platinum">
                     {faq.q}
                   </span>
                   <ChevronDown
-                    size={18}
-                    className={`text-accent flex-shrink-0 transition-transform duration-300 ${
+                    size={20}
+                    className={`text-white flex-shrink-0 transition-transform duration-300 ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
                 <div className={`accordion-content ${isOpen ? 'open' : ''}`}>
                   <div>
-                    <p className="px-5 pb-5 text-body text-text-secondary leading-relaxed font-sans">
+                    <p className="px-6 pb-6 text-body text-silver-mist leading-relaxed font-sans">
                       {faq.a}
                     </p>
                   </div>

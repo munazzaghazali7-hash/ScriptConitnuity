@@ -1,4 +1,5 @@
-import { AlertTriangle, CloudRain, ShieldAlert } from 'lucide-react';
+import { ArrowUpRight, CloudRain, ShieldAlert, AlertTriangle } from 'lucide-react';
+import GeometricMolecule from './GeometricMolecule';
 
 const examples = [
   {
@@ -32,61 +33,70 @@ const examples = [
 
 export default function ExampleCards() {
   return (
-    <section className="section bg-bg">
+    <section className="section bg-liquid-abyss">
       <div className="container-main">
         {/* Header */}
-        <div className="mb-16">
-          <h2 className="text-h2 text-text-primary mb-4 font-mono text-center md:text-left">
+        <div className="mb-12 md:mb-20 text-center md:text-left max-w-2xl">
+          <span className="section-eyebrow block mb-4">Intelligence</span>
+          <h2 className="text-[61px] leading-none tracking-[-2.44px] text-platinum mb-6 font-medium">
             The details you might miss
           </h2>
-          <p className="text-body-lg text-text-secondary max-w-2xl text-center md:text-left font-sans">
+          <p className="text-[16px] leading-[1.4] text-silver-mist">
             It's impossible to hold an entire 120-page world state in your head. 
             The agent tracks every prop, character, and weather state to catch what slips through the cracks.
           </p>
         </div>
 
-        {/* Masonry-ish grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-          {examples.map((ex, i) => {
-            const Icon = ex.icon;
-            const isMajor = ex.severity === 'major';
-            return (
-              <div key={i} className="card bg-[#161616] flex flex-col hover:border-white/20 transition-colors group">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors`}>
-                    <Icon size={18} className={isMajor ? 'text-severity-major' : 'text-severity-minor'} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="badge-category border-white/10">{ex.category}</span>
+        {/* Asymmetric Layout */}
+        <div className="grid md:grid-cols-12 gap-12 lg:gap-24 items-start">
+          
+          {/* Left Column: Feature Row Cards */}
+          <div className="md:col-span-7 flex flex-col gap-4 stagger-children">
+            {examples.map((ex, i) => {
+              const isMajor = ex.severity === 'major';
+              return (
+                <div key={i} className="card-feature border-b border-white/5 last:border-b-0 rounded-none md:rounded-cards md:border-b-0 md:bg-[var(--color-liquid-kelp)]/0 hover:md:bg-[var(--color-liquid-kelp)]/50 transition-colors group flex items-start gap-6">
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-[24px] text-platinum font-medium tracking-tight">
+                        {ex.category}
+                      </h3>
                       <span className={isMajor ? 'badge-major' : 'badge-minor'}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${isMajor ? 'bg-severity-major' : 'bg-severity-minor'}`} />
                         {isMajor ? 'Major' : 'Minor'}
                       </span>
                     </div>
-                    <p className="text-body-sm font-mono text-text-muted">{ex.title}</p>
-                  </div>
-                </div>
+                    
+                    <p className="text-[16px] leading-[1.4] text-silver-mist mb-6 max-w-md">
+                      {ex.description}
+                    </p>
 
-                <p className="text-body text-text-primary mb-6 font-sans">
-                  {ex.description}
-                </p>
+                    <div className="space-y-3 font-matter text-[13px] text-silver-mist leading-[1.5] opacity-80 border-l border-white/10 pl-4">
+                      {ex.quoteA.split('\n').map((line, j) => (
+                        <p key={`a-${j}`} className={j === 0 ? 'text-[var(--color-lavender-phosphor)] uppercase tracking-wide' : ''}>{line}</p>
+                      ))}
+                      <div className="h-2"></div>
+                      {ex.quoteB.split('\n').map((line, j) => (
+                        <p key={`b-${j}`} className={j === 0 ? 'text-white uppercase tracking-wide' : ''}>{line}</p>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="mt-auto space-y-3 pt-4 border-t border-white/10">
-                  <div className="p-3 rounded-lg bg-bg font-mono text-xs text-text-secondary border border-white/5">
-                    {ex.quoteA.split('\n').map((line, j) => (
-                      <p key={j} className={j === 0 ? 'text-accent font-medium mb-1' : ''}>{line}</p>
-                    ))}
-                  </div>
-                  <div className="p-3 rounded-lg bg-bg font-mono text-xs text-text-secondary border border-white/5">
-                    {ex.quoteB.split('\n').map((line, j) => (
-                      <p key={j} className={j === 0 ? 'text-accent-purple font-medium mb-1' : ''}>{line}</p>
-                    ))}
-                  </div>
+                  {/* Arrow Icon Button */}
+                  <button className="w-[32px] h-[32px] rounded-[6px] bg-[rgba(3,81,75,0.5)] flex items-center justify-center flex-shrink-0 transition-colors hover:bg-[rgba(3,81,75,0.8)] mt-2">
+                    <ArrowUpRight size={18} className="text-white" />
+                  </button>
+
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {/* Right Column: Geometric Molecule */}
+          <div className="md:col-span-5 relative hidden md:block sticky top-32">
+            <GeometricMolecule className="mx-auto" />
+          </div>
+
         </div>
       </div>
     </section>

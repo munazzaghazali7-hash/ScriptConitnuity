@@ -31,12 +31,12 @@ export default function ReportPage() {
 
   if (!report) {
     return (
-      <div className="min-h-screen bg-bg">
+      <div className="min-h-screen bg-liquid-abyss">
         <Navbar />
         <main className="pt-28 pb-20">
           <div className="container-narrow text-center">
-            <h1 className="text-h1 text-text-primary mb-4 font-mono">No report available</h1>
-            <p className="text-body-lg text-text-secondary mb-8 font-sans">
+            <h1 className="text-heading text-platinum mb-4 font-medium">No report available</h1>
+            <p className="text-body text-silver-mist mb-8">
               Upload a screenplay first to generate a continuity report.
             </p>
             <button onClick={() => navigate('/upload')} className="btn-primary">
@@ -49,21 +49,21 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-liquid-abyss">
       <Navbar />
 
       <main className="pt-28 pb-20">
-        <div className="container-main max-w-4xl">
+        <div className="container-main max-w-[1000px]">
           {/* Back + download */}
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={() => navigate('/upload')}
-              className="btn-ghost !px-0 font-mono text-xs uppercase tracking-wider"
+              className="btn-ghost !px-0"
             >
-              <ArrowLeft size={14} className="mr-1" />
-              cd ..
+              <ArrowLeft size={14} className="mr-2" />
+              Go back
             </button>
-            <button onClick={handleDownload} className="btn-secondary text-xs font-mono !px-4 !py-2 border-white/20 hover:border-accent hover:text-accent">
+            <button onClick={handleDownload} className="btn-base bg-liquid-kelp text-white hover:bg-[#004d49] text-[14px] px-4 py-2">
               <Download size={14} className="mr-1.5" />
               Download JSON
             </button>
@@ -77,7 +77,7 @@ export default function ReportPage() {
 
           {/* Filter tabs */}
           <div className="flex items-center gap-2 mb-6">
-            <div className="flex items-center gap-1 p-1 bg-white/5 border border-white/10 rounded-xl">
+            <div className="flex items-center gap-1 p-1 bg-liquid-deep rounded-buttons">
               {[
                 { key: 'all', label: 'All', count: report.summary?.total_contradictions },
                 { key: 'major', label: 'Major', count: report.summary?.major_count },
@@ -86,16 +86,16 @@ export default function ReportPage() {
                 <button
                   key={tab.key}
                   onClick={() => setFilter(tab.key)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-mono transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-sm text-[12px] uppercase tracking-wide font-medium transition-all duration-200 ${
                     filter === tab.key
-                      ? 'bg-white/10 text-white shadow-[0_0_10px_rgba(255,255,255,0.05)] border border-white/10'
-                      : 'text-text-muted hover:text-text-secondary border border-transparent'
+                      ? 'bg-liquid-kelp text-white'
+                      : 'text-silver-mist hover:text-white'
                   }`}
                 >
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded bg-black/50 ${
-                      filter === tab.key ? 'text-accent' : 'text-text-muted'
+                    <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-sm ${
+                      filter === tab.key ? 'bg-liquid-abyss text-lavender-phosphor' : 'bg-liquid-kelp text-silver-mist'
                     }`}>
                       {tab.count}
                     </span>
@@ -116,9 +116,9 @@ export default function ReportPage() {
                 />
               ))
             ) : (
-              <div className="card bg-[#161616] border border-white/10 text-center py-12">
+              <div className="card-surface text-center py-12">
                 <Filter size={24} className="text-white/20 mx-auto mb-3" />
-                <p className="text-sm font-mono text-text-secondary">
+                <p className="text-sm text-silver-mist">
                   No {filter !== 'all' ? filter : ''} contradictions found.
                 </p>
               </div>

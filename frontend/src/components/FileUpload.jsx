@@ -71,11 +71,11 @@ export default function FileUpload({ onFileSelected, disabled }) {
           className={`
             flex flex-col items-center justify-center gap-4
             w-full min-h-[240px] p-8
-            rounded-2xl border-2 border-dashed cursor-pointer
-            transition-all duration-300 bg-[#161616]
+            rounded-cards cursor-pointer
+            transition-all duration-300
             ${dragOver
-              ? 'border-accent shadow-[0_0_30px_rgba(1,179,159,0.2)] bg-accent/5 scale-[1.01]'
-              : 'border-white/20 hover:border-accent hover:bg-white/5'
+              ? 'bg-[#004d49] border border-white/20 scale-[1.01]'
+              : 'bg-liquid-kelp border border-transparent hover:bg-[#004d49]'
             }
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
@@ -89,39 +89,39 @@ export default function FileUpload({ onFileSelected, disabled }) {
           />
 
           <div className={`
-            w-14 h-14 rounded-2xl flex items-center justify-center border transition-colors duration-300
-            ${dragOver ? 'bg-accent/20 border-accent text-accent' : 'bg-white/5 border-white/10 text-text-muted hover:text-accent'}
+            w-14 h-14 rounded-buttons flex items-center justify-center transition-colors duration-300
+            ${dragOver ? 'bg-liquid-deep text-platinum' : 'bg-liquid-deep text-silver-mist hover:text-white'}
           `}>
             <Upload size={24} />
           </div>
 
-          <div className="text-center font-mono">
-            <p className="text-body font-medium text-text-primary mb-1">
-              {dragOver ? '> Drop screenplay here_' : '> Drop a screenplay PDF here_'}
+          <div className="text-center font-sans">
+            <p className="text-body font-medium text-platinum mb-1">
+              {dragOver ? 'Drop screenplay here' : 'Drop a screenplay PDF here'}
             </p>
-            <p className="text-body-sm text-text-muted">
+            <p className="text-[12px] text-silver-mist uppercase tracking-wide">
               or click to browse // max 50MB
             </p>
           </div>
         </label>
       ) : (
         /* Selected file display */
-        <div className="card bg-[#161616] flex items-center gap-4 border-accent/30 shadow-[0_0_15px_rgba(1,179,159,0.1)]">
-          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0">
-            <FileText size={22} className="text-accent" />
+        <div className="card-surface !py-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-buttons bg-liquid-deep flex items-center justify-center flex-shrink-0">
+            <FileText size={22} className="text-lavender-phosphor" />
           </div>
-          <div className="flex-1 min-w-0 font-mono">
-            <p className="text-body font-medium text-text-primary truncate">
+          <div className="flex-1 min-w-0 font-sans">
+            <p className="text-body font-medium text-platinum truncate">
               {selectedFile.name}
             </p>
-            <p className="text-body-sm text-accent">
+            <p className="text-[12px] text-silver-mist mt-1 uppercase tracking-wide">
               {formatSize(selectedFile.size)}
             </p>
           </div>
           {!disabled && (
             <button
               onClick={clearFile}
-              className="p-2 rounded-lg hover:bg-white/10 text-text-muted hover:text-white transition-colors"
+              className="p-2 rounded-buttons bg-liquid-deep hover:bg-[#004d49] text-silver-mist hover:text-white transition-colors"
               aria-label="Remove file"
             >
               <X size={18} />
@@ -132,8 +132,8 @@ export default function FileUpload({ onFileSelected, disabled }) {
 
       {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 mt-3 text-severity-major text-body-sm font-mono bg-severity-major-bg border border-severity-major-border p-3 rounded-lg">
-          <AlertCircle size={16} />
+        <div className="flex items-center gap-3 mt-4 text-severity-major text-[13px] font-sans bg-severity-major-bg border border-severity-major-border p-4 rounded-cards">
+          <AlertCircle size={18} />
           {error}
         </div>
       )}
