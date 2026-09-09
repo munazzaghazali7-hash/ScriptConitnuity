@@ -155,13 +155,24 @@ def _mock_extract_scene(prompt: str) -> str:
             else:
                 wardrobe.append({"character": "UNKNOWN", "description": desc.strip()})
 
-    # Detect continuity markers
+    # Detect continuity markers — use word-boundary matching to avoid
+    # false positives (e.g. "an earlier drizzle" should NOT match "earlier")
     continuity_markers = []
-    marker_phrases = ["same day", "later that", "moments later", "continuous",
-                      "flashback", "flash forward", "earlier", "next morning",
-                      "the following", "hours later", "minutes later"]
-    for phrase in marker_phrases:
-        if phrase in prompt_lower:
+    marker_patterns = {
+        "same day": r'\bsame\s+day\b',
+        "later that": r'\blater\s+that\b',
+        "moments later": r'\bmoments\s+later\b',
+        "continuous": r'\bcontinuous\b',
+        "flashback": r'\bflashback\b',
+        "flash forward": r'\bflash\s+forward\b',
+        "earlier that same day": r'\bearlier\s+that\s+same\s+day\b',
+        "next morning": r'\bnext\s+morning\b',
+        "the following day": r'\bthe\s+following\s+day\b',
+        "hours later": r'\bhours\s+later\b',
+        "minutes later": r'\bminutes\s+later\b',
+    }
+    for phrase, pattern in marker_patterns.items():
+        if re.search(pattern, prompt_lower):
             continuity_markers.append(phrase)
 
     result = {
@@ -188,85 +199,158 @@ def _mock_check_contradictions(prompt: str) -> str:
 
     # Try to parse the structured data from the prompt
     try:
-        # Look for current scene facts in the prompt
-        current_match = re.search(r'current scene facts:\s*(\{.+?\})', prompt, re.DOTALL)
-        history_match = re.search(r'continuity history:\s*(\[.+\])', prompt, re.DOTALL)
+        # Extract current scene JSON and history JSON from prompt.
+        # The prompt format is:
+        #   Current scene facts:\n{...}\n\nContinuity history:\n[...]\n\nCurrent scene raw text:\n...
+        current = None
+        history = None
 
-        if current_match and history_match:
-            current = json.loads(current_match.group(1))
-            history = json.loads(history_match.group(1))
+        # Find current scene facts JSON block
+        curr_idx = prompt.lower().find("current scene facts:")
+        hist_idx = prompt.lower().find("continuity history:")
+        raw_idx = prompt.lower().find("current scene raw text:")
+
+        if curr_idx >= 0 and hist_idx >= 0:
+            # Current scene JSON is between "current scene facts:" and "continuity history:"
+            curr_block = prompt[curr_idx:hist_idx].strip()
+            # Find the JSON object in this block
+            brace_start = curr_block.find("{")
+            if brace_start >= 0:
+                depth = 0
+                for i in range(brace_start, len(curr_block)):
+                    if curr_block[i] == "{":
+                        depth += 1
+                    elif curr_block[i] == "}":
+                        depth -= 1
+                        if depth == 0:
+                            current = json.loads(curr_block[brace_start:i+1])
+                            break
+
+        if hist_idx >= 0:
+            # History JSON starts after "continuity history:"
+            end_idx = raw_idx if raw_idx >= 0 else len(prompt)
+            hist_block = prompt[hist_idx:end_idx].strip()
+            bracket_start = hist_block.find("[")
+            if bracket_start >= 0:
+                depth = 0
+                for i in range(bracket_start, len(hist_block)):
+                    if hist_block[i] == "[":
+                        depth += 1
+                    elif hist_block[i] == "]":
+                        depth -= 1
+                        if depth == 0:
+                            history = json.loads(hist_block[bracket_start:i+1])
+                            break
+
+        if current and history:
 
             current_scene = current.get("scene_number", 0)
-            current_weather = current.get("weather", "").lower()
+            current_weather = current.get("weather", "").lower().strip()
             current_props = [p.lower() for p in current.get("props", [])]
             current_wardrobe = current.get("wardrobe", [])
             current_markers = [m.lower() for m in current.get("continuity_markers", [])]
-            current_location = current.get("location", "").lower()
+            current_location = current.get("location", "").lower().strip()
             current_chars = [c.lower() for c in current.get("characters", [])]
 
             for prev in history:
                 prev_scene = prev.get("scene_number", 0)
-                prev_weather = prev.get("weather", "").lower()
+                prev_weather = prev.get("weather", "").lower().strip()
                 prev_props = [p.lower() for p in prev.get("props", [])]
                 prev_wardrobe = prev.get("wardrobe", [])
                 prev_markers = [m.lower() for m in prev.get("continuity_markers", [])]
-                prev_location = prev.get("location", "").lower()
+                prev_location = prev.get("location", "").lower().strip()
                 prev_chars = [c.lower() for c in prev.get("characters", [])]
 
-                # Weather contradiction: same day but different weather
+                # -----------------------------------------------------------
+                # Weather contradiction: different weather when temporal
+                # markers suggest the same day — regardless of location
+                # (e.g. flashback to "earlier that same day")
+                # -----------------------------------------------------------
                 if current_weather and prev_weather and current_weather != prev_weather:
-                    same_day = any(m in ["same day", "earlier", "flashback", "continuous", "moments later"]
-                                  for m in current_markers + prev_markers)
-                    if same_day:
+                    temporal_keywords = ["same day", "earlier that same day",
+                                         "flashback", "continuous",
+                                         "moments later"]
+                    has_temporal_link = any(
+                        m in temporal_keywords
+                        for m in current_markers + prev_markers
+                    )
+                    if has_temporal_link:
                         contradictions.append({
                             "scene_a": prev_scene,
                             "scene_b": current_scene,
                             "category": "weather",
                             "description": (
                                 f"Scene {prev_scene} establishes {prev_weather} weather, "
-                                f"but Scene {current_scene} (marked as '{', '.join(current_markers)}') "
-                                f"describes {current_weather} weather on what should be the same day."
+                                f"but Scene {current_scene} (marked as "
+                                f"'{', '.join(current_markers)}') describes "
+                                f"{current_weather} weather on what should be the same day."
                             ),
                             "severity": "major",
+                            "scene_a_excerpt": f"Scene {prev_scene} weather: {prev_weather}",
+                            "scene_b_excerpt": f"Scene {current_scene} weather: {current_weather}",
                             "suggested_resolution": (
-                                f"Reconcile weather between Scenes {prev_scene} and {current_scene}. "
-                                f"Either update the weather to be consistent or remove the "
-                                f"same-day/flashback temporal link."
+                                f"Reconcile weather between Scenes {prev_scene} and "
+                                f"{current_scene}. Either update the weather to be "
+                                f"consistent or remove the same-day/flashback temporal link."
                             ),
                         })
 
-                # Props contradiction: prop in earlier scene at same location, missing now
-                if current_location and prev_location and current_location == prev_location:
-                    missing_props = [p for p in prev_props if p not in current_props]
-                    reappearing_props = [p for p in current_props
-                                        if any(f"reach" in prompt_lower and p in prompt_lower)]
-                    for prop in missing_props:
-                        # Check if the scene text references the prop being gone or reaching for it
-                        if prop in prompt_lower and ("reach" in prompt_lower or "grab" in prompt_lower
-                                                      or "missing" in prompt_lower or "empty" in prompt_lower
-                                                      or "gone" in prompt_lower):
-                            contradictions.append({
-                                "scene_a": prev_scene,
-                                "scene_b": current_scene,
-                                "category": "props",
-                                "description": (
-                                    f"Scene {prev_scene} places a {prop} at {prev_location.upper()}, "
-                                    f"but in Scene {current_scene} (same location, no one entered or left) "
-                                    f"the {prop} appears to be missing or the character reaches for it "
-                                    f"despite it not being established in this scene."
-                                ),
-                                "severity": "major",
-                                "suggested_resolution": (
-                                    f"Ensure the {prop} is consistently present at "
-                                    f"{prev_location.upper()} across Scenes {prev_scene} and "
-                                    f"{current_scene}, or add action showing it being moved/removed."
-                                ),
-                            })
+                # -----------------------------------------------------------
+                # Props contradiction: a prop was present at a location in an
+                # earlier scene but the raw text of the current scene (same
+                # location) implies the prop is missing / character reaches
+                # for it.
+                # -----------------------------------------------------------
+                if (current_location and prev_location
+                        and current_location == prev_location):
+                    # Check raw text for evidence of missing props
+                    raw_text_lower = prompt_lower
+                    reach_words = ["reach", "grab", "missing", "empty",
+                                   "gone", "nothing", "finds nothing",
+                                   "hand finds"]
+                    has_reach = any(w in raw_text_lower for w in reach_words)
 
-                # Wardrobe contradiction: same character, continuous scene, different outfit
+                    if has_reach:
+                        for prop in prev_props:
+                            if prop in raw_text_lower:
+                                contradictions.append({
+                                    "scene_a": prev_scene,
+                                    "scene_b": current_scene,
+                                    "category": "props",
+                                    "description": (
+                                        f"Scene {prev_scene} places a {prop} at "
+                                        f"{prev_location.upper()}, but in Scene "
+                                        f"{current_scene} (same location) the "
+                                        f"character reaches for the {prop} but it "
+                                        f"appears to be missing."
+                                    ),
+                                    "severity": "major",
+                                    "scene_a_excerpt": (
+                                        f"Scene {prev_scene}: {prop} placed at "
+                                        f"{prev_location.upper()}"
+                                    ),
+                                    "scene_b_excerpt": (
+                                        f"Scene {current_scene}: character reaches "
+                                        f"for {prop} but finds nothing"
+                                    ),
+                                    "suggested_resolution": (
+                                        f"Ensure the {prop} is consistently present "
+                                        f"at {prev_location.upper()} across Scenes "
+                                        f"{prev_scene} and {current_scene}, or add "
+                                        f"action showing it being moved/removed."
+                                    ),
+                                })
+                                break  # One prop contradiction per location pair
+
+                # -----------------------------------------------------------
+                # Wardrobe contradiction: same character, continuous scene,
+                # different outfit description
+                # -----------------------------------------------------------
                 if current_wardrobe and prev_wardrobe:
-                    is_continuous = any(m in ["continuous", "moments later"]
-                                       for m in current_markers)
+                    is_continuous = any(
+                        m in ["continuous", "moments later"]
+                        for m in current_markers
+                    )
                     if is_continuous:
                         for cw in current_wardrobe:
                             for pw in prev_wardrobe:
@@ -274,24 +358,72 @@ def _mock_check_contradictions(prompt: str) -> str:
                                 p_char = pw.get("character", "").lower()
                                 c_desc = cw.get("description", "").lower()
                                 p_desc = pw.get("description", "").lower()
-                                if c_char and p_char and c_char == p_char and c_desc != p_desc:
+                                if (c_char and p_char
+                                        and c_char == p_char
+                                        and c_desc != p_desc):
                                     contradictions.append({
                                         "scene_a": prev_scene,
                                         "scene_b": current_scene,
                                         "category": "wardrobe",
                                         "description": (
-                                            f"Scene {prev_scene} shows {p_char.upper()} wearing "
-                                            f"'{p_desc}', but Scene {current_scene} (marked "
-                                            f"'continuous'/'moments later') shows them in "
-                                            f"'{c_desc}' with no costume change."
+                                            f"Scene {prev_scene} shows "
+                                            f"{p_char.upper()} wearing '{p_desc}', "
+                                            f"but Scene {current_scene} (marked "
+                                            f"'continuous'/'moments later') shows "
+                                            f"them in '{c_desc}' — impossible "
+                                            f"costume change with no time break."
                                         ),
                                         "severity": "major",
+                                        "scene_a_excerpt": (
+                                            f"Scene {prev_scene}: {p_char.upper()} "
+                                            f"wearing '{p_desc}'"
+                                        ),
+                                        "scene_b_excerpt": (
+                                            f"Scene {current_scene}: {p_char.upper()} "
+                                            f"now in '{c_desc}'"
+                                        ),
                                         "suggested_resolution": (
-                                            f"Either add a scene break or wardrobe change for "
-                                            f"{p_char.upper()}, or make the outfit consistent "
-                                            f"across the continuous scenes."
+                                            f"Either add a scene break or wardrobe "
+                                            f"change for {p_char.upper()}, or make "
+                                            f"the outfit consistent across the "
+                                            f"continuous scenes."
                                         ),
                                     })
+
+                # -----------------------------------------------------------
+                # Character presence: shared characters between the
+                # IMMEDIATELY preceding scene at a different location when
+                # the current scene is marked continuous/moments later
+                # -----------------------------------------------------------
+                if (current_location and prev_location
+                        and current_location != prev_location
+                        and prev_scene == current_scene - 1):
+                    shared_chars = set(current_chars) & set(prev_chars)
+                    is_continuous = any(
+                        m in ["continuous", "moments later"]
+                        for m in current_markers
+                    )
+                    if shared_chars and is_continuous:
+                        for char in shared_chars:
+                            contradictions.append({
+                                "scene_a": prev_scene,
+                                "scene_b": current_scene,
+                                "category": "character",
+                                "description": (
+                                    f"{char.upper()} appears at "
+                                    f"{prev_location.upper()} in Scene {prev_scene} "
+                                    f"and at {current_location.upper()} in Scene "
+                                    f"{current_scene} (marked 'continuous'/'moments "
+                                    f"later') — impossible travel time."
+                                ),
+                                "severity": "minor",
+                                "suggested_resolution": (
+                                    f"Add travel time or adjust the temporal marker "
+                                    f"for {char.upper()} between Scenes {prev_scene} "
+                                    f"and {current_scene}."
+                                ),
+                            })
+
     except (json.JSONDecodeError, AttributeError, KeyError):
         pass
 
