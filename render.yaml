@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: scriptcontinuity-backend
+    env: python
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+    autoDeploy: false
+
+  - type: web
+    name: scriptcontinuity-frontend
+    env: static
+    buildCommand: cd frontend && npm install --legacy-peer-deps && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: scriptcontinuity-backend
+          envVarKey: RENDER_EXTERNAL_URL
+    autoDeploy: false

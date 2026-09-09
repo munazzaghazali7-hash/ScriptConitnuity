@@ -4,7 +4,7 @@
  * All communication with the FastAPI backend.
  */
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
  * Upload a screenplay PDF to the backend.
